@@ -30,6 +30,7 @@ import io.netty.util.ReferenceCounted;
 import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.UnstableApi;
 
+import javax.net.ssl.SSLException;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -264,7 +265,7 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, final Throwable cause) throws Exception {
         if (cause instanceof Http2FrameStreamException) {
             Http2FrameStreamException exception = (Http2FrameStreamException) cause;
             Http2FrameStream stream = exception.stream();
@@ -277,6 +278,17 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
             }
             return;
         }
+        if (cause.getCause() instanceof SSLException) {
+            forEachActiveStream(new Http2FrameStreamVisitor() {
+                @Override
+                public boolean visit(Http2FrameStream stream) {
+                    AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel)
+                            ((DefaultHttp2FrameStream) stream).attachment;
+                    childChannel.pipeline().fireExceptionCaught(cause);
+                    return true;
+                }
+            });
+        }
         ctx.fireExceptionCaught(cause);
     }
 
@@ -285,6 +297,11 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
     }
 
     private void onHttp2GoAwayFrame(ChannelHandlerContext ctx, final Http2GoAwayFrame goAwayFrame) {
+        if (goAwayFrame.lastStreamId() == Integer.MAX_VALUE) {
+            // None of the streams can have an id greater than Integer.MAX_VALUE
+            return;
+        }
+        // Notify which streams were not processed by the remote peer and are safe to retry on another connection:
         try {
             final boolean server = isServer(ctx);
             forEachActiveStream(new Http2FrameStreamVisitor() {

@@ -28,14 +28,9 @@ import java.net.SocketAddress;
 import java.util.List;
 
 public abstract class AbstractDatagramTest extends AbstractComboTestsuiteTest<Bootstrap, Bootstrap> {
-
-    protected AbstractDatagramTest() {
-        super(Bootstrap.class, Bootstrap.class);
-    }
-
     @Override
     protected List<TestsuitePermutation.BootstrapComboFactory<Bootstrap, Bootstrap>> newFactories() {
-        return SocketTestPermutation.INSTANCE.datagram(internetProtocolFamily());
+        return SocketTestPermutation.INSTANCE.datagram(socketInternetProtocalFamily());
     }
 
     @Override
@@ -45,7 +40,7 @@ public abstract class AbstractDatagramTest extends AbstractComboTestsuiteTest<Bo
     }
 
     protected SocketAddress newSocketAddress() {
-        switch (internetProtocolFamily()) {
+        switch (socketInternetProtocalFamily()) {
             case IPv4:
                 return new InetSocketAddress(NetUtil.LOCALHOST4, 0);
             case IPv6:
@@ -57,5 +52,13 @@ public abstract class AbstractDatagramTest extends AbstractComboTestsuiteTest<Bo
 
     protected InternetProtocolFamily internetProtocolFamily() {
         return InternetProtocolFamily.IPv4;
+    }
+
+    protected InternetProtocolFamily groupInternetProtocalFamily() {
+        return internetProtocolFamily();
+    }
+
+    protected InternetProtocolFamily socketInternetProtocalFamily() {
+        return internetProtocolFamily();
     }
 }

@@ -88,6 +88,18 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         pipeline = newChannelPipeline();
     }
 
+    protected final int maxMessagesPerWrite() {
+        ChannelConfig config = config();
+        if (config instanceof DefaultChannelConfig) {
+            return ((DefaultChannelConfig) config).getMaxMessagesPerWrite();
+        }
+        Integer value = config.getOption(ChannelOption.MAX_MESSAGES_PER_WRITE);
+        if (value == null) {
+            return Integer.MAX_VALUE;
+        }
+        return value;
+    }
+
     @Override
     public final ChannelId id() {
         return id;
@@ -835,10 +847,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         @Override
         public final void beginRead() {
             assertEventLoop();
-
-            if (!isActive()) {
-                return;
-            }
 
             try {
                 doBeginRead();

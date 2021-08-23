@@ -27,8 +27,8 @@ import java.nio.charset.Charset;
  * Mixed implementation using both in Memory and in File with a limit of size
  */
 public class MixedAttribute implements Attribute {
-    private String baseDir;
-    private boolean deleteOnExit;
+    private final String baseDir;
+    private final boolean deleteOnExit;
     private Attribute attribute;
 
     private final long limitSize;
@@ -270,9 +270,6 @@ public class MixedAttribute implements Attribute {
 
     @Override
     public void setValue(String value) throws IOException {
-        if (value != null) {
-            checkSize(value.getBytes().length);
-        }
         attribute.setValue(value);
     }
 

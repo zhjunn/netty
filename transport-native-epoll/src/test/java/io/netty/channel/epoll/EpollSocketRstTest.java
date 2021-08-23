@@ -26,13 +26,13 @@ import io.netty.testsuite.transport.socket.SocketRstTest;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EpollSocketRstTest extends SocketRstTest {
     @Override
     protected List<TestsuitePermutation.BootstrapComboFactory<ServerBootstrap, Bootstrap>> newFactories() {
-        return EpollSocketTestPermutation.INSTANCE.socket();
+        return EpollSocketTestPermutation.INSTANCE.socketWithoutFastOpen();
     }
 
     @Override
@@ -42,8 +42,8 @@ public class EpollSocketRstTest extends SocketRstTest {
             return;
         }
 
-        assertTrue("actual [type, message]: [" + cause.getClass() + ", " + cause.getMessage() + "]",
-                   cause instanceof NativeIoException);
+        assertTrue(cause instanceof NativeIoException,
+            "actual [type, message]: [" + cause.getClass() + ", " + cause.getMessage() + "]");
         assertEquals(Errors.ERRNO_ECONNRESET_NEGATIVE, ((NativeIoException) cause).expectedErr());
     }
 }

@@ -17,20 +17,14 @@ package io.netty.channel.epoll;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.handler.ssl.SslContext;
 import io.netty.testsuite.transport.TestsuitePermutation;
 import io.netty.testsuite.transport.socket.SocketSslGreetingTest;
 
 import java.util.List;
 
 public class EpollSocketSslGreetingTest extends SocketSslGreetingTest {
-
-    public EpollSocketSslGreetingTest(SslContext serverCtx, SslContext clientCtx, boolean delegate) {
-        super(serverCtx, clientCtx, delegate);
-    }
-
     @Override
     protected List<TestsuitePermutation.BootstrapComboFactory<ServerBootstrap, Bootstrap>> newFactories() {
-        return EpollSocketTestPermutation.INSTANCE.socket();
+        return EpollSocketTestPermutation.INSTANCE.socketWithFastOpen();
     }
 }

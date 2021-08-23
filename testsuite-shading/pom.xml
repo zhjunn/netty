@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.netty</groupId>
     <artifactId>netty-parent</artifactId>
-    <version>4.1.57.Final-SNAPSHOT</version>
+    <version>4.1.68.Final-SNAPSHOT</version>
   </parent>
 
   <artifactId>netty-testsuite-shading</artifactId>
@@ -38,7 +38,9 @@
 
     <jarName>${project.artifactId}-${project.version}.jar</jarName>
     <shadedPackagePrefix>io.netty.</shadedPackagePrefix>
-    <skipJapicmp>true</skipJapicmp>
+    <japicmp.skip>true</japicmp.skip>
+    <!-- Do not deploy this module -->
+    <skipDeploy>true</skipDeploy>
   </properties>
 
   <build>
@@ -127,6 +129,7 @@
       </activation>
       <properties>
         <nativeTransportLib>netty_transport_native_kqueue_${os.detected.arch}.jnilib</nativeTransportLib>
+        <nativeTcnativeLib>netty_tcnative_osx_${os.detected.arch}.jnilib</nativeTcnativeLib>
       </properties>
       <dependencies>
         <dependency>
@@ -227,10 +230,6 @@
                     <copy file="${classesShadedNativeDir}/lib${nativeTransportLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix2}_${nativeTransportLib}" />
                     <delete file="${classesShadedNativeDir}/lib${nativeTransportLib}" />
 
-                    <condition property="nativeTcnativeLib" value="netty_tcnative_osx_${os.detected.arch}.jnilib" else="netty_tcnative.jnilib">
-                      <equals arg1="${tcnative.classifier}" arg2="" />
-                    </condition>
-
                     <copy file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix}_${nativeTcnativeLib}" />
                     <copy file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix2}_${nativeTcnativeLib}" />
                     <delete file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" />
@@ -261,6 +260,37 @@
               </execution>
             </executions>
           </plugin>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>auto-clean</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>clean-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+                <configuration>
+                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                  <filesets>
+                    <fileset>
+                      <directory>${project.build.directory}</directory>
+                      <includes>
+                        <include>${jarName}</include>
+                        <include>original-${jarName}</include>
+                      </includes>
+                    </fileset>
+                  </filesets>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -273,6 +303,7 @@
       </activation>
       <properties>
         <nativeTransportLib>netty_transport_native_epoll_${os.detected.arch}.so</nativeTransportLib>
+        <nativeTcnativeLib>netty_tcnative_linux_${os.detected.arch}.so</nativeTcnativeLib>
       </properties>
       <dependencies>
         <dependency>
@@ -373,10 +404,6 @@
                     <copy file="${classesShadedNativeDir}/lib${nativeTransportLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix2}_${nativeTransportLib}" />
                     <delete file="${classesShadedNativeDir}/lib${nativeTransportLib}" />
 
-                    <condition property="nativeTcnativeLib" value="netty_tcnative_linux_${os.detected.arch}.so" else="netty_tcnative.so">
-                      <equals arg1="${tcnative.classifier}" arg2="" />
-                    </condition>
-
                     <copy file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix}_${nativeTcnativeLib}" />
                     <copy file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" tofile="${classesShadedNativeDir}/lib${shadingPrefix2}_${nativeTcnativeLib}" />
                     <delete file="${classesShadedNativeDir}/lib${nativeTcnativeLib}" />
@@ -404,6 +431,37 @@
                 <goals>
                   <goal>integration-test</goal>
                 </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>auto-clean</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>clean-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+                <configuration>
+                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                  <filesets>
+                    <fileset>
+                      <directory>${project.build.directory}</directory>
+                      <includes>
+                        <include>${jarName}</include>
+                        <include>original-${jarName}</include>
+                      </includes>
+                    </fileset>
+                  </filesets>
+                </configuration>
               </execution>
             </executions>
           </plugin>

@@ -20,6 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.CharsetUtil;
+import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.logging.InternalLogger;
@@ -235,16 +236,16 @@ public final class SelfSignedCertificate {
 
         String[] paths;
         try {
-            // Try the OpenJDK's proprietary implementation.
-            paths = OpenJdkSelfSignedCertGenerator.generate(fqdn, keypair, random, notBefore, notAfter, algorithm);
+            // Try Bouncy Castle first as otherwise we will see an IllegalAccessError on more recent JDKs.
+            paths = BouncyCastleSelfSignedCertGenerator.generate(
+                    fqdn, keypair, random, notBefore, notAfter, algorithm);
         } catch (Throwable t) {
-            logger.debug("Failed to generate a self-signed X.509 certificate using sun.security.x509:", t);
+            logger.debug("Failed to generate a self-signed X.509 certificate using Bouncy Castle:", t);
             try {
-                // Try Bouncy Castle if the current JVM didn't have sun.security.x509.
-                paths = BouncyCastleSelfSignedCertGenerator.generate(
-                        fqdn, keypair, random, notBefore, notAfter, algorithm);
+                // Try the OpenJDK's proprietary implementation.
+                paths = OpenJdkSelfSignedCertGenerator.generate(fqdn, keypair, random, notBefore, notAfter, algorithm);
             } catch (Throwable t2) {
-                logger.debug("Failed to generate a self-signed X.509 certificate using Bouncy Castle:", t2);
+                logger.debug("Failed to generate a self-signed X.509 certificate using sun.security.x509:", t2);
                 final CertificateException certificateException = new CertificateException(
                         "No provider succeeded to generate a self-signed certificate. " +
                                 "See debug log for the root cause.", t2);
@@ -283,7 +284,7 @@ public final class SelfSignedCertificate {
     }
 
     /**
-     * Returns the generated RSA private key file in PEM format.
+     * Returns the generated EC/RSA private key file in PEM format.
      */
     public File privateKey() {
         return privateKey;
@@ -297,14 +298,14 @@ public final class SelfSignedCertificate {
     }
 
     /**
-     * Returns the generated RSA private key.
+     * Returns the generated EC/RSA private key.
      */
     public PrivateKey key() {
         return key;
     }
 
     /**
-     * Deletes the generated X.509 certificate file and RSA private key file.
+     * Deletes the generated X.509 certificate file and EC/RSA private key file.
      */
     public void delete() {
         safeDelete(certificate);
@@ -330,7 +331,10 @@ public final class SelfSignedCertificate {
             wrappedBuf.release();
         }
 
-        File keyFile = File.createTempFile("keyutil_" + fqdn + '_', ".key");
+        // Change all asterisk to 'x' for file name safety.
+        fqdn = fqdn.replaceAll("[^\\w.-]", "x");
+
+        File keyFile = PlatformDependent.createTempFile("keyutil_" + fqdn + '_', ".key", null);
         keyFile.deleteOnExit();
 
         OutputStream keyOut = new FileOutputStream(keyFile);
@@ -361,7 +365,7 @@ public final class SelfSignedCertificate {
             wrappedBuf.release();
         }
 
-        File certFile = File.createTempFile("keyutil_" + fqdn + '_', ".crt");
+        File certFile = PlatformDependent.createTempFile("keyutil_" + fqdn + '_', ".crt", null);
         certFile.deleteOnExit();
 
         OutputStream certOut = new FileOutputStream(certFile);

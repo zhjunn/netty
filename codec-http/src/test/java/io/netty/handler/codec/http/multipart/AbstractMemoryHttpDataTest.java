@@ -21,7 +21,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.internal.PlatformDependent;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -34,7 +34,10 @@ import java.util.Random;
 import java.util.UUID;
 
 import static io.netty.util.CharsetUtil.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** {@link AbstractMemoryHttpData} test cases. */
 public class AbstractMemoryHttpDataTest {
@@ -43,7 +46,7 @@ public class AbstractMemoryHttpDataTest {
     public void testSetContentFromFile() throws Exception {
         TestHttpData test = new TestHttpData("test", UTF_8, 0);
         try {
-            File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
+            File tmpFile = PlatformDependent.createTempFile(UUID.randomUUID().toString(), ".tmp", null);
             tmpFile.deleteOnExit();
             FileOutputStream fos = new FileOutputStream(tmpFile);
             byte[] bytes = new byte[4096];
@@ -70,7 +73,7 @@ public class AbstractMemoryHttpDataTest {
     public void testRenameTo() throws Exception {
         TestHttpData test = new TestHttpData("test", UTF_8, 0);
         try {
-            File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
+            File tmpFile = PlatformDependent.createTempFile(UUID.randomUUID().toString(), ".tmp", null);
             tmpFile.deleteOnExit();
             final int totalByteCount = 4096;
             byte[] bytes = new byte[totalByteCount];
